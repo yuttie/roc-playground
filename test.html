@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>ROC Playground</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/snap.svg/0.5.1/snap.svg-min.js"></script>
+    <style>
+      table {
+        border-collapse: collapse;
+      }
+      table th,
+      table td {
+        border: 1px solid black;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>ROC Playground</h1>
+    <svg id="distribution"></svg>
+    <svg id="roc" width=500 height=500></svg>
+    <table>
+      <tbody>
+        <tr><th></th>                    <th></th>         <th colspan="2">Actual</th></tr>
+        <tr><th></th>                    <th></th>         <th>Positive</th> <th>Negative</th></tr>
+        <tr><th rowspan="2">Predicted</th><th>Positive</th><td id="tp">0</td><td id="fp">0</td></tr>
+        <tr>                              <th>Negative</th><td id="fn">0</td><td id="tn">0</td></tr>
+      </tbody>
+    </table>
+    <div>
+      <div>True Positive rate = <span id="tp-rate"></span></div>
+      <div>False Positive rate = <span id="fp-rate"></span></div>
+    <script>
+      const w = 8;
+      const r = 4;
+      const num_bars = 100;
+      (function() {
+      })();
+      let roc_svg = Snap('#roc');
+      let roc_g = roc_svg.g();
+      let box = roc_svg.rect(0, 0, 500, 500);
+      box.attr({ fill: 'none', stroke: '#000', strokeWidth: 1 });
+      roc_g.add(box);
+      let slash = roc_svg.line(0, 0, 500, 500);
+      slash.attr({ stroke: '#000', strokeWidth: 1, strokeDasharray: '5, 5' });
+      roc_g.add(slash);
+      let roc_points = [];
+      for (let i = 0; i <= num_bars; ++i) {
+        let point = roc_svg.circle(0, 0, r);
+        point.attr({ fill: 'none', stroke: '#000', strokeWidth: 2 });
+        roc_points.push(point);
+        roc_g.add(point);
+      }
+      roc_g.transform('translate(0, 500) scale(1, -1)');
+      let dist_svg = Snap('#distribution');
+      dist_svg.attr({ width: w * num_bars, height: 300 });
+      let dist_g = dist_svg.g();
+      let th_line = dist_svg.line(0, 0, 0, 300);
+      th_line.attr({ stroke: "#000", strokeWidth: 4 });
+      dist_g.add(th_line);
+      let pos_bars = [];
+      let neg_bars = [];
+      for (let i = 0; i < num_bars; ++i) {
+        let bar = dist_svg.rect(w * i, 0, w, 300 * Math.random());
+        bar.attr({ fill: '#00bfff', opacity: 0.4 });
+        pos_bars.push(bar);
+        dist_g.add(bar);
+      }
+      for (let i = 0; i < num_bars; ++i) {
+        let bar = dist_svg.rect(w * i, 0, w, 300 * Math.random());
+        bar.attr({ fill: '#ff00bf', opacity: 0.4 });
+        neg_bars.push(bar);
+        dist_g.add(bar);
+      }
+      dist_g.transform('translate(0, 300) scale(1, -1)');
+      update_roc();
+      function update_roc() {
+        for (let th_i = 0; th_i <= num_bars; ++th_i) {
+          let tp = 0;
+          let fp = 0;
+          let fn = 0;
+          let tn = 0;
+          for (let i = 0; i < th_i; ++i) {
+            fn += parseInt(pos_bars[i].attr('height'));
+            tn += parseInt(neg_bars[i].attr('height'));
+          }
+          for (let i = th_i; i < num_bars; ++i) {
+            tp += parseInt(pos_bars[i].attr('height'));
+            fp += parseInt(neg_bars[i].attr('height'));
+          }
+          let tpr = tp / (tp + fn);
+          let fpr = fp / (fp + tn);
+          let point = roc_points[th_i];
+          point.attr({ cx: 500 * fpr, cy: 500 * tpr });
+        }
+      }
+      dist_svg.mousemove(function(ev) {
+        let bb = dist_svg.node.getBoundingClientRect();
+        let x = ev.clientX - bb.left;
+        let y = ev.clientY - bb.top;
+        y = 300 - y;
+        if (ev.buttons & 1) {
+          let i = Math.floor(x / w);
+          if (ev.shiftKey) {
+            let bar = neg_bars[i];
+            bar.attr({ height: y });
+          }
+          else {
+            let bar = pos_bars[i];
+            bar.attr({ height: y });
+          }
+          // Update ROC
+          update_roc();
+        }
+        else {
+          let th_i = Math.round(x / w);
+          let new_x = w * th_i;
+          th_line.attr({ x1: new_x, x2: new_x });
+          let tp = 0;
+          let fp = 0;
+          let fn = 0;
+          let tn = 0;
+          for (let i = 0; i < th_i; ++i) {
+            fn += parseInt(pos_bars[i].attr('height'));
+            tn += parseInt(neg_bars[i].attr('height'));
+          }
+          for (let i = th_i; i < num_bars; ++i) {
+            tp += parseInt(pos_bars[i].attr('height'));
+            fp += parseInt(neg_bars[i].attr('height'));
+          }
+          let tpr = tp / (tp + fn);
+          let fpr = fp / (fp + tn);
+          document.querySelector('#tp').textContent = tp;
+          document.querySelector('#fp').textContent = fp;
+          document.querySelector('#fn').textContent = fn;
+          document.querySelector('#tn').textContent = tn;
+          document.querySelector('#tp-rate').textContent = tpr;
+          document.querySelector('#fp-rate').textContent = fpr;
+        }
+      });
+    </script>
+  </body>
+</html>
