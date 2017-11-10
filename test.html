@@ -100,7 +100,7 @@
         y = 300 - y;
         if (ev.buttons & 1) {
           let i = Math.floor(x / w);
-          if (ev.shiftKey) {
+          if (ev.ctrlKey) {
             let bar = neg_bars[i];
             bar.attr({ height: y });
           }
