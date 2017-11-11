@@ -34,6 +34,14 @@
       const w = 8;
       const r = 4;
       const num_bars = 100;
+      const data = {
+        pos: [],
+        neg: [],
+      };
+      for (let i = 0; i < num_bars; ++i) {
+        data.pos.push(300 * Math.random());
+        data.neg.push(300 * Math.random());
+      }
       (function() {
       })();
       let roc_svg = Snap('#roc');
@@ -61,13 +69,13 @@
       let pos_bars = [];
       let neg_bars = [];
       for (let i = 0; i < num_bars; ++i) {
-        let bar = dist_svg.rect(w * i, 0, w, 300 * Math.random());
+        let bar = dist_svg.rect(w * i, 0, w, data.pos[i]);
         bar.attr({ fill: '#00bfff', opacity: 0.4 });
         pos_bars.push(bar);
         dist_g.add(bar);
       }
       for (let i = 0; i < num_bars; ++i) {
-        let bar = dist_svg.rect(w * i, 0, w, 300 * Math.random());
+        let bar = dist_svg.rect(w * i, 0, w, data.neg[i]);
         bar.attr({ fill: '#ff00bf', opacity: 0.4 });
         neg_bars.push(bar);
         dist_g.add(bar);
@@ -81,12 +89,12 @@
           let fn = 0;
           let tn = 0;
           for (let i = 0; i < th_i; ++i) {
-            fn += parseInt(pos_bars[i].attr('height'));
-            tn += parseInt(neg_bars[i].attr('height'));
+            fn += data.pos[i];
+            tn += data.neg[i];
           }
           for (let i = th_i; i < num_bars; ++i) {
-            tp += parseInt(pos_bars[i].attr('height'));
-            fp += parseInt(neg_bars[i].attr('height'));
+            tp += data.pos[i];
+            fp += data.neg[i];
           }
           let tpr = tp / (tp + fn);
           let fpr = fp / (fp + tn);
@@ -102,10 +110,12 @@
         if (ev.buttons & 1) {
           let i = Math.floor(x / w);
           if (ev.ctrlKey) {
+            data.neg[i] = y;
             let bar = neg_bars[i];
             bar.attr({ height: y });
           }
           else {
+            data.pos[i] = y;
             let bar = pos_bars[i];
             bar.attr({ height: y });
           }
@@ -121,12 +131,12 @@
           let fn = 0;
           let tn = 0;
           for (let i = 0; i < th_i; ++i) {
-            fn += parseInt(pos_bars[i].attr('height'));
-            tn += parseInt(neg_bars[i].attr('height'));
+            fn += data.pos[i];
+            tn += data.neg[i];
           }
           for (let i = th_i; i < num_bars; ++i) {
-            tp += parseInt(pos_bars[i].attr('height'));
-            fp += parseInt(neg_bars[i].attr('height'));
+            tp += data.pos[i];
+            fp += data.neg[i];
           }
           let tpr = tp / (tp + fn);
           let fpr = fp / (fp + tn);
