@@ -30,6 +30,9 @@
       <div>True Positive rate = <span id="tp-rate"></span></div>
       <div>False Positive rate = <span id="fp-rate"></span></div>
     </div>
+    <div>
+      <div>AUC = <span id="auc"></span></div>
+    </div>
     <script>
       const w = 8;
       const r = 4;
@@ -37,6 +40,7 @@
       const data = {
         pos: [],
         neg: [],
+        roc: [],
       };
       for (let i = 0; i < num_bars; ++i) {
         data.pos.push(300 * Math.random());
@@ -84,7 +88,9 @@
       }
       dist_g.transform('translate(0, 300) scale(1, -1)');
       update_roc();
+      update_auc();
       function update_roc() {
+        data.roc = [];
         for (let th_i = 0; th_i <= num_bars; ++th_i) {
           let tp = 0;
           let fp = 0;
@@ -101,8 +107,27 @@
           let tpr = tp / (tp + fn);
           let fpr = fp / (fp + tn);
           let point = roc_points[th_i];
+          data.roc.push([fpr, tpr]);
           point.attr({ cx: 500 * fpr, cy: 500 * tpr });
         }
+        data.roc.sort();
+      }
+      function compute_auc(roc) {
+        let auc = 0;
+        for (let i = 0; i < roc.length - 1; ++i) {
+          console.log(roc[i]);
+          const x1 = roc[i][0];
+          const y1 = roc[i][1];
+          const x2 = roc[i + 1][0];
+          const y2 = roc[i + 1][1];
+          const area = (y1 + y2) * (x2 - x1) / 2;
+          auc += area;
+        }
+        return auc;
+      }
+      function update_auc() {
+        let auc = compute_auc(data.roc);
+        document.querySelector('#auc').textContent = auc;
       }
       dist_svg.mousemove(function(ev) {
         let bb = dist_svg.node.getBoundingClientRect();
@@ -123,6 +148,7 @@
           }
           // Update ROC
           update_roc();
+          update_auc();
         }
         else {
           let th_i = Math.round(x / w);
