@@ -16,6 +16,7 @@
   </head>
   <body>
     <h1>ROC Playground</h1>
+    <button id="zero">Zero</button>
     <svg id="distribution"></svg>
     <svg id="roc" width=500 height=500></svg>
     <table>
@@ -46,8 +47,14 @@
         data.pos.push(300 * Math.random());
         data.neg.push(300 * Math.random());
       }
-      (function() {
-      })();
+      document.querySelector('#zero').addEventListener("click", function() {
+        for (let i = 0; i < num_bars; ++i) {
+          data.pos[i] = 0;
+          data.neg[i] = 0;
+        }
+        update_bars();
+        update_roc();
+      });
       let roc_svg = Snap('#roc');
       roc_svg.node.ondragstart = function() { return false; };
       let roc_g = roc_svg.g();
@@ -75,20 +82,29 @@
       let pos_bars = [];
       let neg_bars = [];
       for (let i = 0; i < num_bars; ++i) {
-        let bar = dist_svg.rect(w * i, 0, w, data.pos[i]);
+        let bar = dist_svg.rect(w * i, 0, w, 0);
         bar.attr({ fill: '#00bfff', opacity: 0.4 });
         pos_bars.push(bar);
         dist_g.add(bar);
       }
       for (let i = 0; i < num_bars; ++i) {
-        let bar = dist_svg.rect(w * i, 0, w, data.neg[i]);
+        let bar = dist_svg.rect(w * i, 0, w, 0);
         bar.attr({ fill: '#ff00bf', opacity: 0.4 });
         neg_bars.push(bar);
         dist_g.add(bar);
       }
       dist_g.transform('translate(0, 300) scale(1, -1)');
+      update_bars();
       update_roc();
       update_auc();
+      function update_bars() {
+        for (let i = 0; i < num_bars; ++i) {
+          pos_bars[i].attr({ height: data.pos[i] });
+        }
+        for (let i = 0; i < num_bars; ++i) {
+          neg_bars[i].attr({ height: data.pos[i] });
+        }
+      }
       function update_roc() {
         data.roc = [];
         for (let th_i = 0; th_i <= num_bars; ++th_i) {
